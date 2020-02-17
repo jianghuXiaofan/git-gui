@@ -60,17 +60,19 @@
 #   Represents a procedure that conceptually has multiple entrypoints that must
 #   all be called before the procedure executes. Each entrypoint is called a
 #   "note". The chord is only "completed" when all the notes are "activated".
-oo::class create SimpleChord {
-	variable notes body is_completed
+class SimpleChord {
+	field notes
+	field body
+	field is_completed
 
 	# Constructor:
 	#   set chord [SimpleChord new {body}]
 	#     Creates a new chord object with the specified body script. The
 	#     body script is evaluated at most once, when a note is activated
 	#     and the chord has no other non-activated notes.
-	constructor {body} {
+	constructor new {i_body} {
 		set notes [list]
-		my eval [list set body $body]
+		set body $i_body
 		set is_completed 0
 	}
 
@@ -92,7 +94,7 @@ oo::class create SimpleChord {
 	method add_note {} {
 		if {$is_completed} { error "Cannot add a note to a completed chord" }
 
-		set note [ChordNote new [self]]
+		set note [ChordNote::new [self]]
 
 		lappend notes $note
 
@@ -119,13 +121,14 @@ oo::class create SimpleChord {
 #   final note of the chord is activated (this can be any note in the chord,
 #   with all other notes already previously activated in any order), the chord's
 #   body is evaluated.
-oo::class create ChordNote {
-	variable chord is_activated
+class ChordNote {
+	field chord
+	field is_activated
 
 	# Constructor:
 	#   Instances of ChordNote are created internally by calling add_note on
 	#   SimpleChord objects.
-	constructor {chord} {
+	constructor new {chord} {
 		my eval set chord $chord
 		set is_activated 0
 	}
@@ -151,7 +154,7 @@ oo::class create ChordNote {
 	#     used to support dynamic dispatch, but must take parameters to
 	#     identify the "unknown" method to be invoked. In this form, this
 	#     proc serves only to make instances behave directly like methods.)
-	method unknown {} {
+	method activate {} {
 		if {!$is_activated} {
 			set is_activated 1
 			$chord notify_note_activation
